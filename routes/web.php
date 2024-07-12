@@ -1,48 +1,43 @@
+
 <?php
-
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ProductController;
+ 
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OrderController;
+ 
 Route::get('/', function () {
     return view('welcome');
 });
-
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+ 
+Route::controller(AuthController::class)->group(function () {
+    Route::get('register', 'register')->name('register');
+    Route::post('register', 'registerSave')->name('register.save');
+  
+    Route::get('login', 'login')->name('login');
+    Route::post('login', 'loginAction')->name('login.action');
+  
+    Route::get('logout', 'logout')->middleware('auth')->name('logout');
 });
+  
+Route::middleware('auth')->group(function () {
+Route::get('/dashboard', [ProductController::class, 'dashboard'])->name('dashboard');
 
-require __DIR__.'/auth.php';
+ 
+    Route::controller(ProductController::class)->prefix('products')->group(function () {
+        Route::get('', 'index')->name('products');
+        Route::get('create', 'create')->name('products.create');
+        Route::post('store', 'store')->name('products.store');
+        Route::get('show/{id}', 'show')->name('products.show');
+        Route::get('edit/{id}', 'edit')->name('products.edit');
+        Route::put('edit/{id}', 'update')->name('products.update');
+        Route::delete('destroy/{id}', 'destroy')->name('products.destroy');
+        Route::post('products/{id}/order', [ProductController::class, 'order'])->name('products.order');
+        
 
-route::get('admin/dashboard',[HomeController::class,'index']);
-// Route::get('/products', [ProductController::class, 'index'])->name('product.view');
-// Route::get('/products/create', [ProductController::class, 'create'])->name('product.create');
-// Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/products', [ProductController::class, 'index'])->name('product.view');
-    Route::get('/products/create', [ProductController::class, 'create'])->name('product.create');
-    Route::post('/products', [ProductController::class, 'store'])->name('product.store');
-    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('product.edit');
-Route::put('/products/{product}', [ProductController::class, 'update'])->name('product.update');
-
-    // Add other routes for show, edit, update, delete as needed
+        
+    });
+ 
+    Route::get('/profile', [App\Http\Controllers\AuthController::class, 'profile'])->name('profile');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
 });
